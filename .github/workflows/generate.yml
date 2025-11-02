@@ -1,0 +1,57 @@
+name: Generate Network Events
+
+on:
+  push:
+    paths:
+      - '**.ligaya'
+  pull_request:
+    paths:
+      - '**.ligaya'
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Install Lune
+        uses: lune-org/setup-lune@v1
+        with:
+          version: '0.8.0'
+      
+      - name: Generate network events
+        run: |
+          # Generate example events
+          lune run tools/generate.luau \
+            examples/events.ligaya \
+            examples/NetworkEvents.luau
+      
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Commit changes
+        if: steps.changes.outputs.changed == 'true' && github.event_name == 'push'
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "chore: regenerate network events [skip ci]"
+          file_pattern: "examples/NetworkEvents.luau"
+      
+      - name: Comment on PR
+        if: steps.changes.outputs.changed == 'true' && github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '⚠️ Network events need to be regenerated. Please run `lune run tools/generate.luau` locally.'
+            })

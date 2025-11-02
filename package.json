@@ -1,0 +1,34 @@
+{
+  "name": "ligaya",
+  "version": "1.0.0",
+  "description": "High-performance networking framework for Roblox with compile-time type safety",
+  "main": "init.luau",
+  "scripts": {
+    "generate": "lune run tools/generate.luau examples/events.ligaya examples/NetworkEvents.luau",
+    "generate:watch": "nodemon --watch examples/events.ligaya --exec npm run generate",
+    "test": "echo \"Run tests in Roblox Studio\" && exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/ligaya.git"
+  },
+  "keywords": [
+    "roblox",
+    "networking",
+    "luau",
+    "performance",
+    "type-safety",
+    "buffer",
+    "compression",
+    "framework"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yourusername/ligaya/issues"
+  },
+  "homepage": "https://github.com/yourusername/ligaya#readme",
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  }
+}

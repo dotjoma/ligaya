@@ -1,0 +1,14 @@
+[package]
+name = "yourusername/ligaya"
+version = "1.0.0"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+description = "High-performance networking framework for Roblox with compile-time type safety"
+license = "MIT"
+authors = ["Your Name"]
+include = ["src", "init.luau", "LICENSE", "README.md"]
+exclude = ["tests", "benchmarks", "test-scripts", "examples", "docs"]
+
+[dependencies]
+
+[dev-dependencies]

@@ -1,0 +1,94 @@
+-- Ligaya Event Definition File
+-- This file defines type-safe network events
+
+-- Player movement events
+event PlayerPosition {
+    from: Client,
+    type: Unreliable,
+    priority: High,
+    data: (Vector3),
+}
+
+event PlayerRotation {
+    from: Client,
+    type: Unreliable,
+    priority: Normal,
+    data: (CFrame),
+}
+
+-- Combat events
+event PlayerDamage {
+    from: Server,
+    type: Reliable,
+    priority: Critical,
+    data: (number, string),
+}
+
+event PlayerHeal {
+    from: Server,
+    type: Reliable,
+    priority: High,
+    data: (number),
+}
+
+-- Chat events
+event ChatMessage {
+    from: Client,
+    type: Reliable,
+    priority: Normal,
+    compress: true,
+    data: (string),
+}
+
+event ChatBroadcast {
+    from: Server,
+    type: Reliable,
+    priority: Normal,
+    data: (string, string), -- playerName, message
+}
+
+-- Inventory events
+event InventoryUpdate {
+    from: Server,
+    type: Reliable,
+    priority: Normal,
+    compress: true,
+    data: (table),
+}
+
+event ItemPickup {
+    from: Client,
+    type: Reliable,
+    priority: Normal,
+    data: (Instance),
+}
+
+-- Game state events
+event GameStart {
+    from: Server,
+    type: Reliable,
+    priority: Critical,
+    data: (),
+}
+
+event GameEnd {
+    from: Server,
+    type: Reliable,
+    priority: Critical,
+    data: (string, number), -- winner, score
+}
+
+-- Visual effects
+event SpawnEffect {
+    from: Server,
+    type: Unreliable,
+    priority: Low,
+    data: (Vector3, string), -- position, effectType
+}
+
+event PlaySound {
+    from: Server,
+    type: Unreliable,
+    priority: Normal,
+    data: (string, number), -- soundId, volume
+}

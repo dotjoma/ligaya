@@ -1,0 +1,37 @@
+# Roblox Studio Files
+*.rbxl
+*.rbxlx
+*.rbxm
+*.rbxmx
+
+# Rojo
+*.project.json
+
+# Operating System
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Node modules (if using any JS tools)
+node_modules/
+
+# Wally
+Packages/

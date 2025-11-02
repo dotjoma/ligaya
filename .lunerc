@@ -1,0 +1,9 @@
+# Lune Configuration for Ligaya Framework
+# This file configures Lune runtime settings
+
+[runtime]
+version = "0.8.0"
+
+[paths]
+# Add tools directory to module search path
+modules = ["tools", "src"]

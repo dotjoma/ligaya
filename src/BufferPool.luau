@@ -70,8 +70,8 @@ function BufferPool:Release(buf: buffer)
 
 	-- Only return to pool if it's the standard size
 	if buffer.len(buf) == self._bufferSize then
-		-- Clear buffer before returning to pool
-		buffer.fill(buf, 0, 0)
+		-- Clear buffer before returning to pool (fill with 0 from start to end)
+		buffer.fill(buf, 0, 0, buffer.len(buf))
 		table.insert(self._available, buf)
 	else
 		-- Let GC handle oversized buffers

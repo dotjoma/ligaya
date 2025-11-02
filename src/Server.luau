@@ -8,6 +8,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local Config = require(script.Parent.Config)
 local Types = require(script.Parent.Types)
 local BufferPool = require(script.Parent.BufferPool)
 local MiddlewareModule = require(script.Parent.Middleware)
@@ -86,7 +87,16 @@ function Server:Initialize(config: any?)
 	end)
 
 	self._initialized = true
-	print("[Ligaya] Server initialized")
+	print(`[Ligaya] Server initialized - v{Config.Version} ({Config.VersionName})`)
+
+	-- Debug: Print registered events after a short delay to ensure all are registered
+	task.delay(0.5, function()
+		local sortedNames = self:_getSortedEventNames()
+		print(`[Ligaya] Server has {#sortedNames} events registered:`)
+		for index, name in ipairs(sortedNames) do
+			print(`  [{index - 1}] {name}`)
+		end
+	end)
 end
 
 function Server:RegisterEvent(config: EventConfig)
@@ -97,6 +107,7 @@ function Server:RegisterEvent(config: EventConfig)
 
 	self._events[config.Name] = config
 	self._handlers[config.Name] = {}
+	self:_invalidateEventCache() -- Invalidate cache when new event is registered
 end
 
 function Server:Fire(player: Player, eventName: string, ...: any)
@@ -305,6 +316,18 @@ function Server:_stepReplication()
 		if reliableCursor > 0 then
 			local finalBuffer = buffer.create(reliableCursor)
 			buffer.copy(finalBuffer, 0, reliableBuffer, 0, reliableCursor)
+
+			if Config.IsDebugEnabled("NetworkTraffic") then
+				print(`[Ligaya] Sending {reliableCursor} bytes to {player.Name}`)
+				if reliableCursor >= 4 then
+					local b0 = buffer.readu8(finalBuffer, 0)
+					local b1 = buffer.readu8(finalBuffer, 1)
+					local b2 = buffer.readu8(finalBuffer, 2)
+					local b3 = buffer.readu8(finalBuffer, 3)
+					print(`[Ligaya] First 4 bytes: [{b0}, {b1}, {b2}, {b3}]`)
+				end
+			end
+
 			ReliableRemote:FireClient(player, finalBuffer, reliableInstances)
 		end
 
@@ -330,8 +353,13 @@ function Server:_serializeEvent(item: any, playerBuffer: any): number
 		return 0
 	end
 
-	-- Write event to buffer using FastSerializer
 	local startCursor = playerBuffer.Cursor
+
+	if Config.IsDebugEnabled("Events") then
+		print(`[Ligaya] Server writing event {eventName} (index {eventIndex}) at cursor {startCursor}`)
+	end
+
+	-- Write event to buffer using FastSerializer
 	playerBuffer.Cursor = FastSerializer.WriteEvent(
 		playerBuffer.Buffer,
 		playerBuffer.Cursor,
@@ -340,29 +368,47 @@ function Server:_serializeEvent(item: any, playerBuffer: any): number
 		playerBuffer.Instances
 	)
 
-	return playerBuffer.Cursor - startCursor
+	local bytesWritten = playerBuffer.Cursor - startCursor
+
+	if Config.IsDebugEnabled("Events") then
+		print(`[Ligaya] Server wrote {bytesWritten} bytes, cursor now at {playerBuffer.Cursor}`)
+	end
+
+	return bytesWritten
+end
+
+-- Cache sorted event names to ensure consistency
+local _sortedEventNamesCache = nil
+
+function Server:_getSortedEventNames(): { string }
+	if not _sortedEventNamesCache then
+		_sortedEventNamesCache = {}
+		for name, _ in pairs(self._events) do
+			table.insert(_sortedEventNamesCache, name)
+		end
+		table.sort(_sortedEventNamesCache)
+	end
+	return _sortedEventNamesCache
+end
+
+function Server:_invalidateEventCache()
+	_sortedEventNamesCache = nil
 end
 
 function Server:_getEventIndex(eventName: string): number?
-	local index = 0
-	for name, _ in pairs(self._events) do
+	local sortedNames = self:_getSortedEventNames()
+
+	for index, name in ipairs(sortedNames) do
 		if name == eventName then
-			return index
+			return index - 1 -- 0-based indexing
 		end
-		index += 1
 	end
 	return nil
 end
 
 function Server:_getEventName(eventIndex: number): string?
-	local index = 0
-	for name, _ in pairs(self._events) do
-		if index == eventIndex then
-			return name
-		end
-		index += 1
-	end
-	return nil
+	local sortedNames = self:_getSortedEventNames()
+	return sortedNames[eventIndex + 1] -- Convert from 0-based to 1-based
 end
 
 return Server

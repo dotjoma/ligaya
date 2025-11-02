@@ -4,6 +4,8 @@
 
 local RunService = game:GetService("RunService")
 
+local Config = require(script.Config)
+
 -- Export the appropriate module based on context
 local Ligaya
 
@@ -16,7 +18,8 @@ else
 	Ligaya = {
 		Initialize = function() end,
 		RegisterEvent = function() end,
-		VERSION = "1.0.0",
+		VERSION = Config.Version,
+		VERSION_NAME = Config.VersionName,
 		PROTOCOL_VERSION = 1,
 	}
 	return Ligaya
@@ -29,8 +32,12 @@ Ligaya.Middleware = MiddlewareModule.Middlewares
 -- Export compression module
 Ligaya.Compression = require(script.Compression)
 
--- Add version info
-Ligaya.VERSION = "1.0.0"
+-- Add version info from Config
+Ligaya.VERSION = Config.Version
+Ligaya.VERSION_NAME = Config.VersionName
 Ligaya.PROTOCOL_VERSION = 1
+
+-- Export Config for external access
+Ligaya.Config = Config
 
 return Ligaya

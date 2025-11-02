@@ -7,6 +7,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local Config = require(script.Parent.Config)
 local Types = require(script.Parent.Types)
 local BufferPool = require(script.Parent.BufferPool)
 local MiddlewareModule = require(script.Parent.Middleware)
@@ -80,7 +81,16 @@ function Client:Initialize(config: any?)
 	end)
 
 	self._initialized = true
-	print("[Ligaya] Client initialized")
+	print(`[Ligaya] Client initialized - v{Config.Version} ({Config.VersionName})`)
+
+	-- Debug: Print registered events after a short delay to ensure all are registered
+	task.delay(0.5, function()
+		local sortedNames = self:_getSortedEventNames()
+		print(`[Ligaya] Client has {#sortedNames} events registered:`)
+		for index, name in ipairs(sortedNames) do
+			print(`  [{index - 1}] {name}`)
+		end
+	end)
 end
 
 function Client:RegisterEvent(config: EventConfig)
@@ -91,6 +101,7 @@ function Client:RegisterEvent(config: EventConfig)
 
 	self._events[config.Name] = config
 	self._handlers[config.Name] = {}
+	self:_invalidateEventCache() -- Invalidate cache when new event is registered
 end
 
 function Client:Fire(eventName: string, ...: any)
@@ -168,10 +179,33 @@ function Client:_processIncoming(incomingBuffer: buffer, instances: { Instance }
 
 	local size = buffer.len(RecieveBuffer)
 
+	if Config.IsDebugEnabled("NetworkTraffic") then
+		print(`[Ligaya] Client received {size} bytes`)
+		if size >= 4 then
+			local b0 = buffer.readu8(RecieveBuffer, 0)
+			local b1 = buffer.readu8(RecieveBuffer, 1)
+			local b2 = buffer.readu8(RecieveBuffer, 2)
+			local b3 = buffer.readu8(RecieveBuffer, 3)
+			print(`[Ligaya] First 4 bytes: [{b0}, {b1}, {b2}, {b3}]`)
+		end
+	end
+
+	local eventCount = 0
 	while RecieveCursor < size do
+		eventCount += 1
+
+		if Config.IsDebugEnabled("Events") then
+			print(`[Ligaya] Reading event #{eventCount} at cursor {RecieveCursor}/{size}`)
+		end
+
 		-- Read event using FastSerializer
 		local eventIndex, data, newCursor = FastSerializer.ReadEvent(RecieveBuffer, RecieveCursor, instances)
 		local bytesRead = newCursor - RecieveCursor
+
+		if Config.IsDebugEnabled("Events") then
+			print(`[Ligaya] Event #{eventCount}: index={eventIndex}, bytesRead={bytesRead}, newCursor={newCursor}`)
+		end
+
 		RecieveCursor = newCursor
 
 		-- Dispatch event
@@ -180,6 +214,10 @@ function Client:_processIncoming(incomingBuffer: buffer, instances: { Instance }
 		-- Record metrics
 		local eventName = self:_getEventName(eventIndex) or "Unknown"
 		self._metrics:RecordEventReceived(eventName, bytesRead)
+	end
+
+	if Config.IsDebugEnabled("Events") then
+		print(`[Ligaya] Finished processing {eventCount} events`)
 	end
 end
 
@@ -285,26 +323,38 @@ function Client:_serializeEvent(item: any): number
 	return SendCursor - startCursor
 end
 
-function Client:_getEventIndex(eventName: string): number?
-	local index = 0
-	for name, _ in pairs(self._events) do
-		if name == eventName then
-			return index
+-- Cache sorted event names to ensure consistency
+local _sortedEventNamesCache = nil
+
+function Client:_getSortedEventNames(): { string }
+	if not _sortedEventNamesCache then
+		_sortedEventNamesCache = {}
+		for name, _ in pairs(self._events) do
+			table.insert(_sortedEventNamesCache, name)
 		end
-		index += 1
+		table.sort(_sortedEventNamesCache)
+	end
+	return _sortedEventNamesCache
+end
+
+function Client:_invalidateEventCache()
+	_sortedEventNamesCache = nil
+end
+
+function Client:_getEventIndex(eventName: string): number?
+	local sortedNames = self:_getSortedEventNames()
+
+	for index, name in ipairs(sortedNames) do
+		if name == eventName then
+			return index - 1 -- 0-based indexing
+		end
 	end
 	return nil
 end
 
 function Client:_getEventName(eventIndex: number): string?
-	local index = 0
-	for name, _ in pairs(self._events) do
-		if index == eventIndex then
-			return name
-		end
-		index += 1
-	end
-	return nil
+	local sortedNames = self:_getSortedEventNames()
+	return sortedNames[eventIndex + 1] -- Convert from 0-based to 1-based
 end
 
 return Client

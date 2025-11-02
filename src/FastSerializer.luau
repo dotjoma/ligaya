@@ -4,6 +4,8 @@
 -- Ligaya Framework - Fast Direct Buffer Serializer
 -- High-performance serialization without JSON overhead
 
+local Config = require(script.Parent.Config)
+
 local FastSerializer = {}
 
 -- Type identifiers (1 byte each)
@@ -75,15 +77,25 @@ local function writeValue(buf: buffer, cursor: number, value: any, instances: { 
 		buffer.writeu16(buf, cursor + 1, #instances)
 		return cursor + 3
 	elseif valueType == "table" then
-		-- Check if it's an array
+		-- Check if it's an array by checking if all keys are sequential numbers starting from 1
 		local isArray = true
+		local maxIndex = 0
 		local count = 0
+
 		for k, _ in pairs(value) do
 			count += 1
-			if type(k) ~= "number" or k ~= count then
-				isArray = false
-				break
+			if isArray then -- Only check array properties if we haven't already determined it's not an array
+				if type(k) ~= "number" or k < 1 or k % 1 ~= 0 then
+					isArray = false
+				elseif k > maxIndex then
+					maxIndex = k
+				end
 			end
+		end
+
+		-- Verify it's truly sequential (no gaps)
+		if isArray and maxIndex ~= count then
+			isArray = false
 		end
 
 		if isArray then
@@ -95,13 +107,34 @@ local function writeValue(buf: buffer, cursor: number, value: any, instances: { 
 				cursor = writeValue(buf, cursor, value[i], instances)
 			end
 		else
+			local startCursor = cursor
 			buffer.writeu8(buf, cursor, TYPE_TABLE)
 			buffer.writeu16(buf, cursor + 1, count)
 			cursor = cursor + 3
 
+			if Config.IsDebugEnabled("Serialization") then
+				print(`[FastSerializer] writeValue TABLE: writing {count} key-value pairs`)
+			end
+
+			local pairIndex = 0
 			for k, v in pairs(value) do
+				pairIndex += 1
+				local beforeKey = cursor
 				cursor = writeValue(buf, cursor, k, instances)
+				local beforeValue = cursor
 				cursor = writeValue(buf, cursor, v, instances)
+
+				if Config.IsDebugEnabled("BufferOperations") then
+					print(
+						`[FastSerializer] writeValue TABLE pair #{pairIndex}: key ({typeof(k)}) {cursor - beforeKey} bytes, value ({typeof(
+							v
+						)}) {cursor - beforeValue} bytes`
+					)
+				end
+			end
+
+			if Config.IsDebugEnabled("Serialization") then
+				print(`[FastSerializer] writeValue TABLE: total {cursor - startCursor} bytes`)
 			end
 		end
 
@@ -169,18 +202,37 @@ local function readValue(buf: buffer, cursor: number, instances: { Instance }): 
 
 		return array, cursor
 	elseif typeId == TYPE_TABLE then
+		local startCursor = cursor - 1 -- -1 because we already read the type byte
 		local count = buffer.readu16(buf, cursor)
 		cursor += 2
 
+		if Config.IsDebugEnabled("Serialization") then
+			print(`[FastSerializer] readValue TABLE: reading {count} key-value pairs`)
+		end
+
 		local tbl = {}
-		for _ = 1, count do
+		for i = 1, count do
+			local beforeKey = cursor
 			local key, newCursor = readValue(buf, cursor, instances)
 			cursor = newCursor
 
+			local beforeValue = cursor
 			local value, newCursor2 = readValue(buf, cursor, instances)
 			cursor = newCursor2
 
+			if Config.IsDebugEnabled("BufferOperations") then
+				print(
+					`[FastSerializer] readValue TABLE pair #{i}: key ({typeof(key)}) {cursor - beforeKey} bytes, value ({typeof(
+						value
+					)}) {cursor - beforeValue} bytes`
+				)
+			end
+
 			tbl[key] = value
+		end
+
+		if Config.IsDebugEnabled("Serialization") then
+			print(`[FastSerializer] readValue TABLE: total {cursor - startCursor} bytes`)
 		end
 
 		return tbl, cursor
@@ -192,13 +244,28 @@ end
 
 -- Serialize array of values
 function FastSerializer.Serialize(buf: buffer, cursor: number, values: { any }, instances: { Instance }): number
+	local startCursor = cursor
+
 	-- Write count
 	buffer.writeu8(buf, cursor, #values)
 	cursor += 1
 
+	if Config.IsDebugEnabled("Serialization") then
+		print(`[FastSerializer] Serialize: writing {#values} values starting at cursor {startCursor}`)
+	end
+
 	-- Write each value
-	for _, value in values do
+	for i, value in values do
+		local beforeCursor = cursor
 		cursor = writeValue(buf, cursor, value, instances)
+
+		if Config.IsDebugEnabled("BufferOperations") then
+			print(`[FastSerializer] Serialize: value #{i} ({typeof(value)}) wrote {cursor - beforeCursor} bytes`)
+		end
+	end
+
+	if Config.IsDebugEnabled("Serialization") then
+		print(`[FastSerializer] Serialize: total {cursor - startCursor} bytes written`)
 	end
 
 	return cursor
@@ -206,16 +273,31 @@ end
 
 -- Deserialize array of values
 function FastSerializer.Deserialize(buf: buffer, cursor: number, instances: { Instance }): ({ any }, number)
+	local startCursor = cursor
+
 	-- Read count
 	local count = buffer.readu8(buf, cursor)
 	cursor += 1
 
+	if Config.IsDebugEnabled("Serialization") then
+		print(`[FastSerializer] Deserialize: reading {count} values starting at cursor {startCursor}`)
+	end
+
 	-- Read each value
 	local values = table.create(count)
 	for i = 1, count do
+		local beforeCursor = cursor
 		local value, newCursor = readValue(buf, cursor, instances)
 		values[i] = value
 		cursor = newCursor
+
+		if Config.IsDebugEnabled("BufferOperations") then
+			print(`[FastSerializer] Deserialize: value #{i} ({typeof(value)}) read {cursor - beforeCursor} bytes`)
+		end
+	end
+
+	if Config.IsDebugEnabled("Serialization") then
+		print(`[FastSerializer] Deserialize: total {cursor - startCursor} bytes read`)
 	end
 
 	return values, cursor
@@ -229,12 +311,24 @@ function FastSerializer.WriteEvent(
 	data: { any },
 	instances: { Instance }
 ): number
+	local startCursor = cursor
+
 	-- Write event index (2 bytes)
 	buffer.writeu16(targetBuffer, cursor, eventIndex)
 	cursor += 2
 
+	if Config.IsDebugEnabled("Events") then
+		print(`[FastSerializer] WriteEvent: eventIndex={eventIndex}, cursor after index={cursor}`)
+	end
+
 	-- Serialize data
 	cursor = FastSerializer.Serialize(targetBuffer, cursor, data, instances)
+
+	if Config.IsDebugEnabled("Events") then
+		print(
+			`[FastSerializer] WriteEvent: serialized {#data} args, cursor: {startCursor} -> {cursor}, total bytes: {cursor - startCursor}`
+		)
+	end
 
 	return cursor
 end
@@ -245,12 +339,24 @@ function FastSerializer.ReadEvent(
 	cursor: number,
 	instances: { Instance }
 ): (number, { any }, number)
+	local startCursor = cursor
+
 	-- Read event index
 	local eventIndex = buffer.readu16(sourceBuffer, cursor)
 	cursor += 2
 
+	if Config.IsDebugEnabled("Events") then
+		print(`[FastSerializer] ReadEvent: eventIndex={eventIndex}, cursor after index={cursor}`)
+	end
+
 	-- Deserialize data
 	local data, newCursor = FastSerializer.Deserialize(sourceBuffer, cursor, instances)
+
+	if Config.IsDebugEnabled("Events") then
+		print(
+			`[FastSerializer] ReadEvent: deserialized {#data} args, cursor: {cursor} -> {newCursor}, total bytes: {newCursor - startCursor}`
+		)
+	end
 
 	return eventIndex, data, newCursor
 end

@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/ligaya.git"
+    "url": "git+https://github.com/dotjoma/ligaya.git"
   },
   "keywords": [
     "roblox",
@@ -25,9 +25,9 @@
   "author": "Your Name",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/yourusername/ligaya/issues"
+    "url": "https://github.com/dotjoma/ligaya/issues"
   },
-  "homepage": "https://github.com/yourusername/ligaya#readme",
+  "homepage": "https://github.com/dotjoma/ligaya#readme",
   "devDependencies": {
     "nodemon": "^3.0.0"
   }

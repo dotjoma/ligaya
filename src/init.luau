@@ -16,7 +16,7 @@ else
 	Ligaya = {
 		Initialize = function() end,
 		RegisterEvent = function() end,
-		VERSION = "1.1.0",
+		VERSION = "1.0.0",
 		PROTOCOL_VERSION = 1,
 	}
 	return Ligaya
@@ -30,7 +30,7 @@ Ligaya.Middleware = MiddlewareModule.Middlewares
 Ligaya.Compression = require(script.Compression)
 
 -- Add version info
-Ligaya.VERSION = "1.1.0"
+Ligaya.VERSION = "1.0.0"
 Ligaya.PROTOCOL_VERSION = 1
 
 return Ligaya

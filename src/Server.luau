@@ -411,4 +411,23 @@ function Server:_getEventName(eventIndex: number): string?
 	return sortedNames[eventIndex + 1] -- Convert from 0-based to 1-based
 end
 
+-- ============================================
+-- REMOTEFUNCTION SUPPORT
+-- ============================================
+
+local RemoteFunctionModule = require(script.Parent.RemoteFunction)
+local ServerFunctionCallbacks: { [string]: (Player, ...any) -> ...any } = {}
+
+function Server:OnInvoke(functionName: string, callback: (Player, ...any) -> ...any)
+	if not self._initialized then
+		error("[Ligaya] Server not initialized. Call Initialize() first")
+	end
+
+	-- Register the function if not already registered
+	RemoteFunctionModule.RegisterServerFunction(functionName)
+
+	-- Set the callback
+	return RemoteFunctionModule.OnInvoke(functionName, callback)
+end
+
 return Server

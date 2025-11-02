@@ -37,22 +37,47 @@ print(`📄 Reading: {inputFile}`)
 -- Read input file
 local content = fs.readFile(inputFile)
 
-print(`⚙️  Parsing events...`)
+print(`⚙️  Parsing definitions...`)
 
 -- Parse .ligaya file
-local success, events = pcall(function()
+local success, definitions = pcall(function()
 	return LigayaParser.Parse(content)
 end)
 
 if not success then
-	print(`❌ Parse error: {events}`)
+	print(`❌ Parse error: {definitions}`)
 	process.exit(1)
 end
 
-print(`✅ Found {#events} events:`)
-for _, event in events do
-	local dataStr = #event.DataTypes > 0 and `({table.concat(event.DataTypes, ", ")})` or "()"
-	print(`   • {event.Name} {dataStr}`)
+print(`✅ Found definitions:`)
+print(`   Events: {#definitions.Events}`)
+print(`   Functions: {#definitions.Functions}`)
+print(`   Enums: {#definitions.Enums}`)
+
+if #definitions.Events > 0 then
+	print(`\n📡 Events:`)
+	for _, event in definitions.Events do
+		local dataStr = #event.DataTypes > 0 and `({table.concat(event.DataTypes, ", ")})` or "()"
+		print(`   • {event.Name} {dataStr}`)
+	end
+end
+
+if #definitions.Functions > 0 then
+	print(`\n🔧 Functions:`)
+	for _, func in definitions.Functions do
+		local dataStr = #func.DataTypes > 0 and `({table.concat(func.DataTypes, ", ")})` or "()"
+		local returnStr = #func.ReturnTypes > 0 and ` -> ({table.concat(func.ReturnTypes, ", ")})` or ""
+		print(`   • {func.Name} {dataStr}{returnStr}`)
+	end
+end
+
+if #definitions.Enums > 0 then
+	print(`\n📋 Enums:`)
+	for _, enum in definitions.Enums do
+		local variantCount = #enum.Variants
+		local enumType = enum.IsTagged and "Tagged" or "Unit"
+		print(`   • {enum.Name} ({enumType}, {variantCount} variants)`)
+	end
 end
 
 print(`\n🔨 Generating type-safe code...`)
@@ -62,7 +87,7 @@ local moduleName = outputFile:match("([^/\\]+)%.luau?$") or "NetworkEvents"
 moduleName = moduleName:gsub("%.luau?$", "")
 
 -- Generate code
-local code = LigayaParser.GenerateCode(events, moduleName)
+local code = LigayaParser.GenerateCode(definitions, moduleName)
 
 print(`💾 Writing: {outputFile}`)
 
@@ -71,13 +96,23 @@ fs.writeFile(outputFile, code)
 
 print(`\n✅ Code generation complete!`)
 print(`\n📊 Summary:`)
-print(`   Events: {#events}`)
+print(`   Events: {#definitions.Events}`)
+print(`   Functions: {#definitions.Functions}`)
+print(`   Enums: {#definitions.Enums}`)
 print(`   Output: {outputFile}`)
 print(`   Lines: {select(2, code:gsub("\n", "\n")) + 1}`)
 
-print(`\n🎯 Usage:`)
-print(`   local {moduleName} = require(path.to.{moduleName})`)
-print(`   {moduleName}.PlayerDamageFire(player, 25, "Fire")`)
-print(`   {moduleName}.PlayerDamageOn(function(damage, type) end)`)
+print(`\n🎯 Usage Examples:`)
+if #definitions.Events > 0 then
+	print(`   -- Events:`)
+	print(`   local {moduleName} = require(path.to.{moduleName})`)
+	print(`   {moduleName}.{definitions.Events[1].Name}Fire(...)`)
+	print(`   {moduleName}.{definitions.Events[1].Name}On(function(...) end)`)
+end
+if #definitions.Functions > 0 then
+	print(`   -- Functions:`)
+	print(`   local result = {moduleName}.{definitions.Functions[1].Name}Invoke(...)`)
+	print(`   {moduleName}.{definitions.Functions[1].Name}On(function(player, ...) return ... end)`)
+end
 
-print(`\n✨ Type-safe networking ready!\n`)
+print(`\n✨ Advanced type-safe networking ready!\n`)

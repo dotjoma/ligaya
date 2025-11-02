@@ -14,6 +14,7 @@
 
 ## ✨ Features
 
+### Core Features
 ✅ **Compile-time Type Safety** - `.ligaya` definition files with code generation ⚡  
 ✅ **3-5x Faster Serialization** - FastSerializer beats JSON  
 ✅ **46% Bandwidth Savings** - Delta compression for position updates  
@@ -23,7 +24,19 @@
 ✅ **Buffer Pooling** - 90% reduction in memory allocations  
 ✅ **Middleware System** - Extensible pipeline for validation, rate limiting  
 ✅ **Built-in Compression** - RLE + Delta compression  
-✅ **Metrics & Monitoring** - Real-time performance tracking  
+✅ **Metrics & Monitoring** - Real-time performance tracking
+
+### Advanced Type System (v2.0) 🆕
+✅ **Integer Types** - u8, u16, u32, i8, i16, i32 with optimal bandwidth  
+✅ **Float Types** - f16, f32, f64 for precision control  
+✅ **Bounded Types** - Ranges like `u8(0..100)`, `string(3..20)`  
+✅ **Optional Types** - `type?` for nullable values  
+✅ **Array Types** - `type[]` with bounds like `u32[1..50]`  
+✅ **Tagged Enums** - Powerful variant types with data  
+✅ **Unit Enums** - Simple value enumerations  
+✅ **RemoteFunctions** - Type-safe request-response pattern  
+✅ **Runtime Validation** - Optional type checking at runtime  
+✅ **More Roblox Types** - BrickColor, DateTime, UDim2, Rect, Region3  
 
 ---
 
@@ -54,20 +67,41 @@ curl -fsSL https://github.com/lune-org/lune/releases/latest/download/lune-linux-
 
 ### 3. Create Event Definitions
 
-Create `events.ligaya`:
+Create `events.ligaya` with advanced types:
 ```lua
+-- Configuration
+option WriteValidations = true
+
+-- Enums
+enum DamageType = {
+    Physical,
+    Fire,
+    Ice,
+    Lightning
+}
+
+-- Events with bounded types
 event PlayerDamage {
     from: Server,
     type: Reliable,
+    call: ManyAsync,
     priority: Critical,
-    data: (number, string),
+    data: (u8(1..100), string),  -- Damage 1-100, type
 }
 
 event PlayerPosition {
     from: Client,
     type: Unreliable,
+    call: ManySync,
     priority: High,
-    data: (Vector3),
+    data: (Vector3, f32),  -- Position, speed
+}
+
+-- RemoteFunction
+function GetPlayerData {
+    yield: Coroutine,
+    data: (u32),
+    return: (string, u8, u32)  -- Name, level, coins
 }
 ```
 
@@ -126,15 +160,27 @@ end)
 
 ## 📚 Documentation
 
+### Getting Started
 - **[Installation Guide](./INSTALLATION.md)** - Get started
 - **[Quick Start (5 min)](./QUICK_START_CODEGEN.md)** - Type-safe setup
+- **[Quick Reference](./docs/QuickReference.md)** - Fast syntax lookup 🆕
+
+### Core Guides
+- **[Advanced Type System](./docs/AdvancedTypeSystem.md)** - Full type system guide 🆕
+- **[RemoteFunction Guide](./docs/RemoteFunctions.md)** - Request-response pattern 🆕
 - **[Type Safety Guide](./docs/TypeSafety.md)** - Compile-time checking
 - **[Code Generator Setup](./docs/CodeGeneratorSetup.md)** - Detailed setup
-- **[Folder Structure Guide](./FOLDER_STRUCTURE_GUIDE.md)** - Project organization
+
+### Advanced Topics
+- **[Migration from Blink](./docs/MigrationFromBlink.md)** - Switch from Blink 🆕
 - **[Optimizations Guide](./docs/Optimizations.md)** - Performance features
+- **[Folder Structure Guide](./FOLDER_STRUCTURE_GUIDE.md)** - Project organization
 - **[API Reference](./docs/API.md)** - Complete API docs
-- **[Comparison with Blink](./docs/Comparison.md)** - Feature comparison
+
+### Resources
+- **[Changelog](./CHANGELOG.md)** - Version history 🆕
 - **[Examples](./examples/)** - Working code samples
+- **[Advanced Example](./examples/advanced.ligaya)** - All features demo 🆕
 
 ---
 
@@ -207,18 +253,30 @@ print(`Bandwidth saved: {metrics.DeltaCompressionSavings} bytes`)
 
 ### vs Blink
 
-| Feature | Blink | Ligaya |
-|---------|-------|--------|
-| Type Safety | ✅ Compile-time | ✅ Compile-time |
-| Performance | Good | **3-5x faster** |
+| Feature | Blink | Ligaya v2.0 |
+|---------|-------|-------------|
+| **Type System** |
+| Integer Types (u8, i16, etc.) | ✅ | ✅ |
+| Bounded Types (ranges) | ✅ | ✅ |
+| Optional Types | ✅ | ✅ |
+| Array Types with bounds | ✅ | ✅ |
+| Tagged Enums | ✅ | ✅ |
+| Unit Enums | ✅ | ✅ |
+| RemoteFunctions | ✅ | ✅ |
+| Runtime Validation | ✅ | ✅ |
+| **Performance** |
+| Serialization Speed | Good | **3-5x faster** |
 | Compression | ❌ | ✅ (46-60% savings) |
-| Priority Queue | ❌ | ✅ (4 levels) |
-| Middleware | ❌ | ✅ (Extensible) |
-| Metrics | ❌ | ✅ (Built-in) |
 | Delta Compression | ❌ | ✅ (46% savings) |
 | Adaptive Batching | ❌ | ✅ (Dynamic) |
+| Buffer Pooling | ❌ | ✅ (90% reduction) |
+| **Features** |
+| Priority Queue | ❌ | ✅ (4 levels) |
+| Middleware System | ❌ | ✅ (Extensible) |
+| Metrics & Monitoring | ❌ | ✅ (Built-in) |
+| Retry Logic | ❌ | ✅ (Automatic) |
 
-**Ligaya = Blink's type safety + Superior performance + Advanced features!**
+**Ligaya v2.0 = Blink's type system + 3-5x performance + Advanced features!**
 
 ### vs Manual RemoteEvents
 

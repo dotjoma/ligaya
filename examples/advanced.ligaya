@@ -1,0 +1,190 @@
+-- Advanced Ligaya Definition File
+-- Showcasing all new features: ranges, optionals, arrays, enums, functions
+
+-- Configuration options
+option WriteValidations = true
+option Casing = Pascal
+
+-- ============================================
+-- ENUMS
+-- ============================================
+
+-- Unit enum (simple values)
+enum DamageType = {
+    Physical,
+    Fire,
+    Ice,
+    Lightning,
+    Poison
+}
+
+-- Tagged enum (variants with data)
+enum PlayerAction = "Type" {
+    Move {
+        Position: Vector3,
+        Speed: f32
+    },
+    Attack {
+        Target: u16,
+        Damage: u8(1..100),
+        DamageType: string
+    },
+    UseItem {
+        ItemId: u32,
+        Quantity: u8(1..99)
+    },
+    Emote {
+        EmoteId: u8,
+        Duration: f32?
+    }
+}
+
+-- ============================================
+-- EVENTS WITH ADVANCED TYPES
+-- ============================================
+
+-- Event with bounded integer types
+event PlayerDamage {
+    from: Server,
+    type: Reliable,
+    call: ManyAsync,
+    priority: Critical,
+    data: (u8(1..100), string)
+}
+
+-- Event with optional types
+event PlayerChat {
+    from: Client,
+    type: Reliable,
+    call: ManyAsync,
+    priority: Normal,
+    data: (string(1..200), string?)
+}
+
+-- Event with arrays and bounds
+event InventoryUpdate {
+    from: Server,
+    type: Reliable,
+    call: ManyAsync,
+    priority: High,
+    data: (u32[], u8[1..50])
+}
+
+-- Event with Vector3 encoding
+event PlayerPosition {
+    from: Client,
+    type: Unreliable,
+    call: ManySync,
+    priority: High,
+    data: (Vector3, f32)
+}
+
+-- Event with CFrame
+event TeleportPlayer {
+    from: Server,
+    type: Reliable,
+    call: SingleAsync,
+    priority: Critical,
+    data: (CFrame, boolean?)
+}
+
+-- Event with multiple advanced types
+event SpawnEntity {
+    from: Server,
+    type: Reliable,
+    call: ManyAsync,
+    priority: High,
+    data: (u16, Vector3, CFrame, u8(0..100), string[1..10])
+}
+
+-- Event with compression
+event LargeDataTransfer {
+    from: Server,
+    type: Reliable,
+    call: ManyAsync,
+    priority: Low,
+    compress: true,
+    data: (string, buffer?)
+}
+
+-- ============================================
+-- REMOTE FUNCTIONS
+-- ============================================
+
+-- Simple function
+function GetPlayerData {
+    yield: Coroutine,
+    data: (u32),
+    return: (string, u8, u32)
+}
+
+-- Function with optional return
+function PurchaseItem {
+    yield: Coroutine,
+    data: (u32, u8(1..99)),
+    return: (boolean, string?)
+}
+
+-- Function with arrays
+function GetLeaderboard {
+    yield: Coroutine,
+    data: (u8(1..100)),
+    return: (string[], u32[])
+}
+
+-- Function with complex types
+function TradeRequest {
+    yield: Coroutine,
+    data: (u32, u32[], u32[]),
+    return: (boolean, string?, u32[]?)
+}
+
+-- ============================================
+-- ADVANCED USE CASES
+-- ============================================
+
+-- Combat system
+event CombatAction {
+    from: Client,
+    type: Reliable,
+    call: ManyAsync,
+    priority: Critical,
+    data: (u16, u8(1..100), string)
+}
+
+-- Skill system with cooldown
+event UseSkill {
+    from: Client,
+    type: Reliable,
+    call: SingleAsync,
+    priority: High,
+    data: (u8, Vector3?, u16?)
+}
+
+-- Quest system
+event QuestUpdate {
+    from: Server,
+    type: Reliable,
+    call: ManyAsync,
+    priority: Normal,
+    data: (u32, u8(0..100), boolean, string?)
+}
+
+-- Party system
+event PartyInvite {
+    from: Server,
+    type: Reliable,
+    call: SingleAsync,
+    priority: Normal,
+    data: (u32, string, u8(1..8))
+}
+
+-- World streaming
+event ChunkData {
+    from: Server,
+    type: Reliable,
+    call: ManyAsync,
+    priority: Low,
+    compress: true,
+    data: (i32, i32, buffer)
+}

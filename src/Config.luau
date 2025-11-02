@@ -4,8 +4,8 @@
 
 local Config = {
 	-- Framework version
-	Version = "1.2.1",
-	VersionName = "Initial Release",
+	Version = "2.0.0",
+	VersionName = "Advanced Type System",
 
 	-- Debug logging flags
 	Debug = {

@@ -357,4 +357,24 @@ function Client:_getEventName(eventIndex: number): string?
 	return sortedNames[eventIndex + 1] -- Convert from 0-based to 1-based
 end
 
+-- ============================================
+-- REMOTEFUNCTION SUPPORT
+-- ============================================
+
+local RemoteFunctionModule = require(script.Parent.RemoteFunction)
+
+function Client:InvokeServer(functionName: string, ...: any): ...any
+	if not self._initialized then
+		error("[Ligaya] Client not initialized. Call Initialize() first")
+	end
+
+	-- Register the function if not already registered (default to Coroutine)
+	if not RemoteFunctionModule.ClientFunctions or not RemoteFunctionModule.ClientFunctions[functionName] then
+		RemoteFunctionModule.RegisterClientFunction(functionName, "Coroutine")
+	end
+
+	-- Invoke the server
+	return RemoteFunctionModule.InvokeServer(functionName, ...)
+end
+
 return Client

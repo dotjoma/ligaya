@@ -38,7 +38,6 @@ local Server = {
 
 -- Per-player state
 local PlayerQueues = {}
-local PlayerBuffers = {}
 
 -- Remote references
 local ReliableRemote: RemoteEvent = nil
@@ -167,19 +166,12 @@ end
 
 function Server:_initializePlayer(player: Player)
 	PlayerQueues[player] = PriorityQueue.new()
-	PlayerBuffers[player] = {
-		Buffer = self._bufferPool:Acquire(2048),
-		Cursor = 0,
-		Instances = {},
-	}
+	-- PlayerBuffers is now created per-replication, not per-player
 end
 
 function Server:_cleanupPlayer(player: Player)
-	if PlayerBuffers[player] then
-		self._bufferPool:Release(PlayerBuffers[player].Buffer)
-	end
 	PlayerQueues[player] = nil
-	PlayerBuffers[player] = nil
+	-- PlayerBuffers is now temporary per-replication, no cleanup needed
 end
 
 function Server:_fireToPlayers(players: { Player }, eventName: string, ...: any)
@@ -261,8 +253,8 @@ end
 
 function Server:_stepReplication()
 	for player, queue in PlayerQueues do
-		local playerBuffer = PlayerBuffers[player]
-		if not playerBuffer then
+		-- Skip if player disconnected during iteration
+		if not player.Parent then
 			continue
 		end
 
@@ -277,6 +269,13 @@ function Server:_stepReplication()
 		local reliableSize = 0
 		local unreliableSize = 0
 		local maxBatchSize = 900
+
+		-- Temporary buffer context for serialization
+		local playerBuffer = {
+			Buffer = reliableBuffer, -- Will be swapped between reliable/unreliable
+			Cursor = 0,
+			Instances = {},
+		}
 
 		-- Process queue and separate by event type
 		while queue:Size() > 0 do
@@ -312,8 +311,8 @@ function Server:_stepReplication()
 			end
 		end
 
-		-- Send reliable events
-		if reliableCursor > 0 then
+		-- Send reliable events (check player still connected)
+		if reliableCursor > 0 and player.Parent then
 			local finalBuffer = buffer.create(reliableCursor)
 			buffer.copy(finalBuffer, 0, reliableBuffer, 0, reliableCursor)
 
@@ -331,14 +330,14 @@ function Server:_stepReplication()
 			ReliableRemote:FireClient(player, finalBuffer, reliableInstances)
 		end
 
-		-- Send unreliable events
-		if unreliableCursor > 0 then
+		-- Send unreliable events (check player still connected)
+		if unreliableCursor > 0 and player.Parent then
 			local finalBuffer = buffer.create(unreliableCursor)
 			buffer.copy(finalBuffer, 0, unreliableBuffer, 0, unreliableCursor)
 			UnreliableRemote:FireClient(player, finalBuffer, unreliableInstances)
 		end
 
-		-- Return buffers to pool
+		-- Always return buffers to pool
 		self._bufferPool:Release(reliableBuffer)
 		self._bufferPool:Release(unreliableBuffer)
 	end

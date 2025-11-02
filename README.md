@@ -161,20 +161,18 @@ end)
 ## 📚 Documentation
 
 ### Getting Started
-- **[Installation Guide](./INSTALLATION.md)** - Get started
-- **[Quick Start (5 min)](./QUICK_START_CODEGEN.md)** - Type-safe setup
+- **[Installation Guide](./docs/Installation.md)** - Get started
+- **[Quick Start (5 min)](./docs/QuickStart.md)** - Type-safe setup
 - **[Quick Reference](./docs/QuickReference.md)** - Fast syntax lookup 🆕
 
 ### Core Guides
 - **[Advanced Type System](./docs/AdvancedTypeSystem.md)** - Full type system guide 🆕
 - **[RemoteFunction Guide](./docs/RemoteFunctions.md)** - Request-response pattern 🆕
-- **[Type Safety Guide](./docs/TypeSafety.md)** - Compile-time checking
-- **[Code Generator Setup](./docs/CodeGeneratorSetup.md)** - Detailed setup
+- **[Comparison with Blink](./docs/Comparison.md)** - Feature comparison
 
 ### Advanced Topics
 - **[Migration from Blink](./docs/MigrationFromBlink.md)** - Switch from Blink 🆕
 - **[Optimizations Guide](./docs/Optimizations.md)** - Performance features
-- **[Folder Structure Guide](./FOLDER_STRUCTURE_GUIDE.md)** - Project organization
 - **[API Reference](./docs/API.md)** - Complete API docs
 
 ### Resources

@@ -1,4 +1,103 @@
-# Ligaya Quick Start Guide
+# Ligaya v2.0 Quick Start Guide
+
+Get started with Ligaya's advanced type system and code generation in 5 minutes!
+
+## Two Ways to Use Ligaya
+
+### Option 1: Type-Safe Code Generation (Recommended) 🆕
+
+Use `.ligaya` definition files for compile-time type safety.
+
+### Option 2: Direct API
+
+Use the framework API directly (traditional approach).
+
+---
+
+## Option 1: Type-Safe Code Generation
+
+### Step 1: Install Lune
+
+```bash
+# Windows
+irm https://github.com/lune-org/lune/releases/latest/download/lune-windows-x86_64.exe -OutFile lune.exe
+
+# macOS
+brew install lune
+
+# Linux
+curl -fsSL https://github.com/lune-org/lune/releases/latest/download/lune-linux-x86_64 -o lune
+```
+
+### Step 2: Create Definition File
+
+Create `events.ligaya`:
+
+```lua
+-- Configuration
+option WriteValidations = true
+
+-- Events with advanced types
+event PlayerDamage {
+    from: Server,
+    type: Reliable,
+    call: ManyAsync,
+    priority: Critical,
+    data: (u8(1..100), string)  -- Damage 1-100, type
+}
+
+event PlayerPosition {
+    from: Client,
+    type: Unreliable,
+    call: ManySync,
+    priority: High,
+    data: (Vector3, f32)  -- Position, speed
+}
+
+-- RemoteFunction
+function GetPlayerData {
+    yield: Coroutine,
+    data: (u32),
+    return: (string, u8, u32)  -- Name, level, coins
+}
+```
+
+### Step 3: Generate Code
+
+```bash
+lune run Packages/Ligaya/tools/generate.luau events.ligaya NetworkEvents.luau
+```
+
+### Step 4: Use Generated Code
+
+```lua
+local NetworkEvents = require(ReplicatedStorage.NetworkEvents)
+
+-- SERVER
+-- Type-safe! Compile-time checked!
+NetworkEvents.PlayerDamageFireAll(25, "Fire")  -- ✅
+-- NetworkEvents.PlayerDamageFireAll("wrong", 123)  -- ❌ Type error!
+
+-- Listen
+NetworkEvents.PlayerDamageOn(function(player, damage: number, damageType: string)
+    print(`{player.Name} took {damage} {damageType} damage`)
+end)
+
+-- RemoteFunction
+NetworkEvents.GetPlayerDataOn(function(player, userId: number)
+    return "Player123", 50, 1000
+end)
+
+-- CLIENT
+NetworkEvents.PlayerPositionFire(Vector3.new(10, 0, 20), 16)
+
+-- RemoteFunction
+local name, level, coins = NetworkEvents.GetPlayerDataInvoke(12345)
+```
+
+---
+
+## Option 2: Direct API (Traditional)
 
 ## Installation
 
@@ -133,6 +232,8 @@ print("Average size:", eventMetrics.AverageSize)
 
 ## Next Steps
 
-- Read the [Architecture Guide](./Architecture.md) to understand the framework
-- Check out [Advanced Usage](./AdvancedUsage.md) for complex scenarios
-- See [Performance Tips](./Performance.md) for optimization strategies
+- Learn about [Advanced Type System](./AdvancedTypeSystem.md) - Ranges, optionals, enums 🆕
+- Read [RemoteFunction Guide](./RemoteFunctions.md) - Request-response pattern 🆕
+- Check [Quick Reference](./QuickReference.md) - Fast syntax lookup 🆕
+- See [Advanced Examples](../examples/advanced.ligaya) - All features demo 🆕
+- Review [Migration from Blink](./MigrationFromBlink.md) - Switch easily 🆕

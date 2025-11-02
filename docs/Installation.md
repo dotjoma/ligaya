@@ -1,6 +1,6 @@
-# Ligaya Installation Guide
+# Ligaya v2.0 Installation Guide
 
-Complete guide for installing and setting up Ligaya in your Roblox game.
+Complete guide for installing and setting up Ligaya v2.0 with advanced type system in your Roblox game.
 
 ## Method 1: Manual Installation (Recommended for Development)
 
@@ -80,7 +80,7 @@ print("Installation successful!")
 
 Run the game. You should see:
 ```
-Ligaya Version: 1.0.0
+Ligaya Version: 2.0.0
 Installation successful!
 ```
 
@@ -116,7 +116,7 @@ cargo install wally-cli
 
 ```toml
 [dependencies]
-Ligaya = "yourusername/ligaya@1.0.0"
+Ligaya = "dotjoma/ligaya@2.0.0"
 ```
 
 ### Step 3: Install
@@ -332,9 +332,10 @@ wally update
 ## Next Steps
 
 - Read the [Quick Start Guide](./QuickStart.md)
-- Check out [Examples](../examples/)
-- Review the [API Reference](./API.md)
-- Run [Benchmarks](../benchmarks/) to verify performance
+- Learn about [Advanced Type System](./AdvancedTypeSystem.md) 🆕
+- Check out [RemoteFunction Guide](./RemoteFunctions.md) 🆕
+- Review the [Quick Reference](./QuickReference.md) 🆕
+- See [Advanced Examples](../examples/advanced.ligaya) 🆕
 
 ---
 

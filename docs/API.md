@@ -1,4 +1,18 @@
-# Ligaya API Reference
+# Ligaya v2.0 API Reference
+
+Complete API documentation for Ligaya Framework v2.0 with advanced type system.
+
+## Quick Links
+
+- [Core API](#core-api) - Initialization, events, listening
+- [Server API](#server-api) - Fire events to clients
+- [Client API](#client-api) - Fire events to server
+- [RemoteFunction API](#remotefunction-api) - Request-response 🆕
+- [Middleware](#middleware) - Extensible pipeline
+- [Metrics](#metrics) - Performance monitoring
+- [Type System](#type-system) - Advanced types 🆕
+
+---
 
 ## Core API
 
@@ -447,11 +461,105 @@ type EventMetrics = {
 
 ---
 
+---
+
+## RemoteFunction API 🆕
+
+### Server-Side
+
+#### `Ligaya:OnInvoke(functionName: string, callback: (Player, ...any) -> ...any)`
+
+Registers a callback for RemoteFunction requests.
+
+**Parameters:**
+- `functionName`: Name of the function
+- `callback`: Handler function that receives player and arguments, returns results
+
+**Returns:**
+- Disconnect function
+
+**Example:**
+```lua
+NetworkEvents.GetPlayerDataOn(function(player, userId: number)
+    local data = DataService:GetData(userId)
+    return data.Name, data.Level, data.Coins
+end)
+```
+
+### Client-Side
+
+#### `Ligaya:InvokeServer(functionName: string, ...any): ...any`
+
+Invokes a server function and waits for response.
+
+**Parameters:**
+- `functionName`: Name of the function
+- `...`: Function arguments
+
+**Returns:**
+- Function results
+
+**Example:**
+```lua
+local name, level, coins = NetworkEvents.GetPlayerDataInvoke(12345)
+print(`Player: {name}, Level: {level}, Coins: {coins}`)
+```
+
+---
+
+## Type System 🆕
+
+### Integer Types
+
+```lua
+u8, u16, u32    -- Unsigned integers
+i8, i16, i32    -- Signed integers
+```
+
+### Float Types
+
+```lua
+f16, f32, f64   -- Half, single, double precision
+```
+
+### Bounded Types
+
+```lua
+u8(0..100)      -- Range 0-100
+string(3..20)   -- 3-20 characters
+u32[1..50]      -- Array of 1-50 elements
+```
+
+### Optional Types
+
+```lua
+string?         -- Optional string
+Vector3?        -- Optional Vector3
+```
+
+### Enums
+
+```lua
+-- Unit enum
+enum DamageType = { Physical, Fire, Ice }
+
+-- Tagged enum
+enum PlayerAction = "Type" {
+    Move { Position: Vector3 },
+    Attack { Damage: u8 }
+}
+```
+
+See [Advanced Type System Guide](./AdvancedTypeSystem.md) for complete documentation.
+
+---
+
 ## Constants
 
 ### Version Information
 ```lua
-Ligaya.VERSION -- "1.0.0"
+Ligaya.VERSION -- "2.0.0"
+Ligaya.VERSION_NAME -- "Advanced Type System"
 Ligaya.PROTOCOL_VERSION -- 1
 ```
 

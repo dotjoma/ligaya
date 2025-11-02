@@ -4,7 +4,7 @@
   <img src="./docs/public/Logo.png" alt="Ligaya Logo" width="200">
   
   [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-  [![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/yourusername/ligaya)
+  [![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/dotjoma/ligaya)
   [![Lune](https://img.shields.io/badge/Lune-0.8.0-purple.svg)](https://lune-org.github.io/docs/)
   
   **High-performance networking framework for Roblox with compile-time type safety**
@@ -33,10 +33,10 @@
 
 ```bash
 # Using Wally (recommended)
-wally install yourusername/ligaya@1.0.0
+wally install dotjoma/ligaya@1.0.0
 
 # Or clone
-git clone https://github.com/yourusername/ligaya.git Packages/Ligaya
+git clone https://github.com/dotjoma/ligaya.git Packages/Ligaya
 ```
 
 ### 2. Install Lune (for type-safe code generation)
@@ -266,7 +266,7 @@ print(`Bandwidth saved: {metrics.DeltaCompressionSavings} bytes`)
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/ligaya.git
+git clone https://github.com/dotjoma/ligaya.git
 cd ligaya
 
 # Install Lune
@@ -319,8 +319,8 @@ MIT License - see [LICENSE](./LICENSE) for details.
 
 ## 📞 Support
 
-- **Issues:** [GitHub Issues](https://github.com/yourusername/ligaya/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/yourusername/ligaya/discussions)
+- **Issues:** [GitHub Issues](https://github.com/dotjoma/ligaya/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/dotjoma/ligaya/discussions)
 - **Documentation:** [Full Docs](./docs/)
 
 ---
@@ -338,6 +338,6 @@ MIT License - see [LICENSE](./LICENSE) for details.
   
   **Built with ❤️ for the Roblox community**
   
-  [⭐ Star on GitHub](https://github.com/yourusername/ligaya) • [📖 Documentation](./docs/) • [💬 Discussions](https://github.com/yourusername/ligaya/discussions)
+  [⭐ Star on GitHub](https://github.com/dotjoma/ligaya) • [📖 Documentation](./docs/) • [💬 Discussions](https://github.com/dotjoma/ligaya/discussions)
   
 </div>

@@ -45,10 +45,6 @@
 ### 1. Install Ligaya
 
 ```bash
-# Using Wally (recommended)
-wally install dotjoma/ligaya@1.0.0
-
-# Or clone
 git clone https://github.com/dotjoma/ligaya.git Packages/Ligaya
 ```
 
